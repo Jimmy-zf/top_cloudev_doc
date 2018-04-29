@@ -1,5 +1,7 @@
 package top.cloudev.doc.service.impl;
 
+import top.cloudev.doc.common.BusinessException;
+import top.cloudev.doc.common.ErrorCode;
 import top.cloudev.doc.dao.CategoryRepository;
 import top.cloudev.doc.domain.Category;
 import top.cloudev.doc.dto.CategoryDTO;
@@ -15,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
+import java.util.List;
 
 /**
  * 领域类 Category(文档分类) 的服务实现层
@@ -39,6 +42,12 @@ public class CategoryServiceImpl implements CategoryService {
     public Category save(Category category, HttpServletRequest request) throws Exception {
 
         if(category.getCategoryId()==null){
+            //判断同一项目里是否有同名文档分类
+            List<Category> list = categoryRepository.findByProjectIdAndNameAndIsDeletedFalse(category.getProjectId(),category.getName());
+            if(list.size() > 0){
+                throw new BusinessException(ErrorCode.Category_Name_Exists);
+            }
+
             category.setCreatorUserId(Long.valueOf(request.getParameter("operator")));
             return categoryRepository.save(category);
         }else{
@@ -47,8 +56,14 @@ public class CategoryServiceImpl implements CategoryService {
             if(request.getParameterValues("projectId") != null && !category.getProjectId().equals(c.getProjectId()))
                 c.setProjectId(category.getProjectId());
 
-            if(request.getParameterValues("name") != null && !category.getName().equals(c.getName()))
+            if(request.getParameterValues("name") != null && !category.getName().equals(c.getName())) {
+                //判断同一项目里是否有同名文档分类
+                List<Category> list = categoryRepository.findByProjectIdAndNameAndIsDeletedFalse(c.getProjectId(),category.getName());
+                if(list.size() > 0){
+                    throw new BusinessException(ErrorCode.Category_Name_Exists);
+                }
                 c.setName(category.getName());
+            }
 
             if(request.getParameterValues("sequence") != null && !category.getSequence().equals(c.getSequence()))
                 c.setSequence(category.getSequence());
@@ -78,13 +93,13 @@ public class CategoryServiceImpl implements CategoryService {
      * @return 返回支持排序和翻页的数据列表
      */
     @Override
-    public Page<Category> getPageData(CategoryDTO dto, Pageable pageable){
-        if(dto.getKeyword() != null) {
+    public Page<Category> getPageData(CategoryDTO dto, Pageable pageable) {
+        if (dto.getKeyword() != null) {
             String keyword = dto.getKeyword().trim();
-            return categoryRepository.findByNameContainingAndIsDeletedFalseAllIgnoringCase(keyword, pageable);
+            return categoryRepository.findByNameContainingAllIgnoringCaseAndProjectIdAndIsDeletedFalse(keyword, dto.getProjectId(), pageable);
         }
 
-        return categoryRepository.findByIsDeletedFalse(pageable);
+        return categoryRepository.findByProjectIdAndIsDeletedFalse(dto.getProjectId(), pageable);
     }
 
     /**

@@ -4,7 +4,6 @@ import java.io.Serializable;
 
 /**
  * Category(文档分类) 的DTO数据传输对象
- * TODO 可根据搜索时的实际需要调整字段，删除不适合用作搜索的字段
  * Created by Mac.Manon on 2018/04/04
  */
 
@@ -17,10 +16,10 @@ public class CategoryDTO implements Serializable {
      */
     private String keyword;
 
-    /**
-     * 分类名称
-     */
-    private String name;
+    /*
+    * 文档分类所属的项目
+    * */
+    private long projectId;
 
     /**
      *空构造函数
@@ -33,9 +32,9 @@ public class CategoryDTO implements Serializable {
      *带参构造函数
      *
      */
-    public CategoryDTO(String keyword, String name){
+    public CategoryDTO(String keyword, long projectId){
         this.keyword = keyword;
-        this.name = name;
+        this.projectId = projectId;
     }
 
     /**
@@ -50,12 +49,12 @@ public class CategoryDTO implements Serializable {
         this.keyword = keyword;
     }
 
-    public String getName() {
-        return name;
+    public long getProjectId() {
+        return projectId;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setProjectId(long projectId) {
+        this.projectId = projectId;
     }
 
 }
